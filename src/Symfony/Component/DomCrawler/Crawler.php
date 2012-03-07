@@ -125,6 +125,10 @@ class Crawler extends \SplObjectStorage
         $dom->validateOnParse = true;
 
         $current = libxml_use_internal_errors(true);
+        if(!preg_match('/<meta.*http-equiv.*=.*content-type.*content.*=.*charset=/i', $content)) {
+            $content = '<meta http-equiv="content-type" content="text/html;charset='.strtolower($charset).'" />' . $content;
+            // This meta tag would goes under the head tag.
+        }
         @$dom->loadHTML($content);
         libxml_use_internal_errors($current);
 

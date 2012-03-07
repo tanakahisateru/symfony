@@ -89,9 +89,35 @@ class CrawlerTest extends \PHPUnit_Framework_TestCase
 EOF
         , 'UTF-8');
 
-        $errors = libxml_get_errors();
-        $this->assertCount(1, $errors);
-        $this->assertEquals("Tag nav invalid\n", $errors[0]->message);
+        $this->assertTrue(count(libxml_get_errors()) > 1);
+
+        $this->assertEquals("#", $crawler->filter('nav a')->eq(0)->attr('href'));
+        $this->assertEquals("#", $crawler->filter('nav a')->eq(1)->attr('href'));
+
+        libxml_clear_errors();
+        libxml_use_internal_errors(false);
+    }
+
+    /**
+     * @covers Symfony\Component\DomCrawler\Crawler::addHtmlContent
+     */
+    public function testAddMultibyteHtmlContent()
+    {
+        libxml_use_internal_errors(true);
+
+        $crawler = new Crawler();
+        $mbstr_encoded = "%E3%81%82%E3%81%84%E3%81%86%E3%81%88%E3%81%8A"; // Japanese a, i, u, e, o
+        $mbstr_raw = urldecode($mbstr_encoded);
+        $crawler->addHtmlContent(<<<EOF
+<!DOCTYPE html>
+<html>
+    <head><meta charset="utf-8"></head>
+    <body>$mbstr_raw</body>
+</html>
+EOF
+        , 'UTF-8');
+
+        $this->assertEquals($mbstr_encoded, urlencode(trim($crawler->filter('body')->text())));
 
         libxml_clear_errors();
         libxml_use_internal_errors(false);
